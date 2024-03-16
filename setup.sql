@@ -39,7 +39,8 @@ CREATE TABLE user_account (
     password_hash BINARY(64),
     join_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     bio TEXT,
-    PRIMARY KEY (user_id)
+    PRIMARY KEY (user_id),
+    is_admin BOOLEAN DEFAULT FALSE
 );
 
 -- Represents a review in the database, uniquely identified by the user_id and
