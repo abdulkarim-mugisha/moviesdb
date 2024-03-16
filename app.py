@@ -569,6 +569,7 @@ def main():
     Main function for starting things up.
     """
     # show_options()
+    # TODO: implement login functionality
     show_main_menu()
 
 if __name__ == "__main__":

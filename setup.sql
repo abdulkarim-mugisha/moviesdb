@@ -89,3 +89,8 @@ CREATE TABLE follower (
 
 CREATE INDEX movie_title_idx ON movie(title);
 CREATE INDEX movie_genre_idx ON movie_genre(genre);
+
+-- TODO: commands for creating database.
+-- CREATE DATABASE moviesdb;
+-- USE moviesdb;
+-- SET GLOBAL local_infile=1;
