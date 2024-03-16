@@ -5,6 +5,7 @@ DROP TABLE IF EXISTS follower;
 DROP TABLE IF EXISTS movie_in_list;
 DROP TABLE IF EXISTS list;
 DROP TABLE IF EXISTS review;
+DROP TABLE IF EXISTS movie_genre;
 DROP TABLE IF EXISTS user_account;
 DROP TABLE IF EXISTS movie;
 
@@ -36,7 +37,7 @@ CREATE TABLE user_account (
     username VARCHAR(255),
     salt CHAR(8),
     password_hash BINARY(64),
-    join_date DATE DEFAULT CURRENT_DATE,
+    join_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     bio TEXT,
     PRIMARY KEY (user_id)
 );
@@ -51,7 +52,7 @@ CREATE TABLE review (
     review_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, movie_id),
     FOREIGN KEY (user_id) REFERENCES user_account(user_id),
-    FOREIGN KEY (movie_id) REFERENCES movie(movie_id),
+    FOREIGN KEY (movie_id) REFERENCES movie(movie_id)
 );
 
 -- Represents a movie list in the database, uniquely identified by the list_id.
@@ -60,7 +61,7 @@ CREATE TABLE list (
     created_by INT,
     title VARCHAR(255),
     description TEXT,
-    date_created DATE DEFAULT CURRENT_DATE,
+    date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (list_id),
     FOREIGN KEY (created_by) REFERENCES user_account(user_id)
 );
@@ -87,5 +88,3 @@ CREATE TABLE follower (
 
 CREATE INDEX movie_title_idx ON movie(title);
 CREATE INDEX movie_genre_idx ON movie_genre(genre);
-
--- #TODO: fix setup errors
