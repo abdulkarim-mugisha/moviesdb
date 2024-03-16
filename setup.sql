@@ -15,7 +15,7 @@ CREATE TABLE movie (
     title VARCHAR(255) NOT NULL,
     release_date DATE NOT NULL,
     description TEXT,
-    director VARCHAR(60),
+    director TEXT,
     cast TEXT,
     -- runtime of the movie in minutes
     runtime INT,
