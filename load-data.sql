@@ -24,16 +24,19 @@ DELIMITER ;
 
 LOAD DATA LOCAL INFILE 'movies.csv' INTO TABLE movie
 FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
--- #TODO: May have to update the AUTO_INCREMENT variable
 
 LOAD DATA LOCAL INFILE 'genres.csv' INTO TABLE movie_genre
 FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
-
--- #TODO: loading lists data
 
 LOAD DATA LOCAL INFILE 'users.csv' INTO TABLE user_account 
 FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n' IGNORE 1 ROWS 
 (username, @password, is_admin)
 SET password_hash = SHA2(CONCAT(salt, @password), 256), salt = make_salt(8);
 
+LOAD DATA LOCAL INFILE 'lists.csv' INTO TABLE list
+FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n' IGNORE 1 ROWS 
+(list_id,created_by,title,description);
+
+LOAD DATA LOCAL INFILE 'movie_in_list.csv' INTO TABLE movie_in_list
+FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
 
