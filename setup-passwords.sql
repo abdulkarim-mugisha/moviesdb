@@ -1,5 +1,5 @@
 DROP FUNCTION IF EXISTS make_salt;
-DROP FUNCTION IF EXISTS authenticate;
+DROP PROCEDURE IF EXISTS authenticate;
 DROP PROCEDURE IF EXISTS sp_add_user;
 DROP PROCEDURE IF EXISTS sp_change_password;
 
@@ -44,22 +44,13 @@ END !
 DELIMITER ;
 
 -- Authenticates the specified username and password against the data
--- in the user_info table.  Returns 1 if the user appears in the table, and the
--- specified password hashes to the value for the user. Otherwise returns 0.
+-- in the user_info table.  Returns the user information if user exists.
 DELIMITER !
-CREATE FUNCTION authenticate(username VARCHAR(20), password VARCHAR(20))
-RETURNS TINYINT DETERMINISTIC
+CREATE PROCEDURE authenticate(username VARCHAR(20), password VARCHAR(20))
 BEGIN
-  IF EXISTS 
-    (
-      SELECT * FROM user_account U
-      WHERE U.username = username 
-      AND U.password_hash = SHA2(CONCAT(U.salt, password), 256)
-    ) THEN RETURN 1;
-  ELSE
-    RETURN 0;
-  END IF;
-
+    SELECT user_id FROM user_account U
+    WHERE U.username = username 
+    AND U.password_hash = SHA2(CONCAT(U.salt, password), 256);
 END !
 DELIMITER ;
 
