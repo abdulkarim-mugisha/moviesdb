@@ -34,13 +34,13 @@ CREATE TABLE movie_genre(
 -- Represents a user in the database, uniquely identified by the user_id.
 CREATE TABLE user_account (
     user_id INT AUTO_INCREMENT,
-    username VARCHAR(255),
-    salt CHAR(8),
-    password_hash BINARY(64),
+    username VARCHAR(255) NOT NULL UNIQUE,
+    salt CHAR(8) NOT NULL,
+    password_hash BINARY(64) NOT NULL,
     join_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     bio TEXT,
-    PRIMARY KEY (user_id),
-    is_admin BOOLEAN DEFAULT FALSE
+    is_admin BOOLEAN DEFAULT FALSE,
+    PRIMARY KEY (user_id)
 );
 
 -- Represents a review in the database, uniquely identified by the user_id and

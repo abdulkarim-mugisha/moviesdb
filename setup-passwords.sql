@@ -36,6 +36,7 @@ BEGIN
 
   SET salt = make_salt(8);
   SET password_hash = SHA2(CONCAT(salt, password), 256);
+  -- #TODO: handle cases where a non-unique username is given
 
   INSERT INTO user_account(username, salt, password_hash, is_admin) VALUES 
     (new_username, salt, password_hash, is_admin);
