@@ -31,7 +31,9 @@ FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
 LOAD DATA LOCAL INFILE 'data/users.csv' INTO TABLE user_account 
 FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n' IGNORE 1 ROWS 
 (username, @password, is_admin)
-SET password_hash = SHA2(CONCAT(salt, @password), 256), salt = make_salt(8);
+SET salt = make_salt(8),
+    password_hash = SHA2(CONCAT(salt, @password), 256);
+    
 
 LOAD DATA LOCAL INFILE 'data/lists.csv' INTO TABLE list
 FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n' IGNORE 1 ROWS 
