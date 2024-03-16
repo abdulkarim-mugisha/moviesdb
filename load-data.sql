@@ -22,21 +22,24 @@ BEGIN
 END !
 DELIMITER ;
 
-LOAD DATA LOCAL INFILE 'movies.csv' INTO TABLE movie
+LOAD DATA LOCAL INFILE 'data/movies.csv' INTO TABLE movie
 FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
 
-LOAD DATA LOCAL INFILE 'genres.csv' INTO TABLE movie_genre
+LOAD DATA LOCAL INFILE 'data/genres.csv' INTO TABLE movie_genre
 FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
 
-LOAD DATA LOCAL INFILE 'users.csv' INTO TABLE user_account 
+LOAD DATA LOCAL INFILE 'data/users.csv' INTO TABLE user_account 
 FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n' IGNORE 1 ROWS 
 (username, @password, is_admin)
 SET password_hash = SHA2(CONCAT(salt, @password), 256), salt = make_salt(8);
 
-LOAD DATA LOCAL INFILE 'lists.csv' INTO TABLE list
+LOAD DATA LOCAL INFILE 'data/lists.csv' INTO TABLE list
 FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n' IGNORE 1 ROWS 
 (list_id,created_by,title,description);
 
-LOAD DATA LOCAL INFILE 'movie_in_list.csv' INTO TABLE movie_in_list
+LOAD DATA LOCAL INFILE 'data/movie_in_list.csv' INTO TABLE movie_in_list
 FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n' IGNORE 1 ROWS;
 
+LOAD DATA LOCAL INFILE 'data/reviews.csv' INTO TABLE review
+FIELDS TERMINATED BY ',' ENCLOSED BY '"' LINES TERMINATED BY '\n' IGNORE 1 ROWS 
+(user_id,movie_id,rating,review_text);
