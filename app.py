@@ -22,7 +22,7 @@ from datetime import datetime
 
 # Debugging flag to print errors when debugging that shouldn't be visible
 # to an actual client. ***Set to False when done testing.***
-DEBUG = True
+DEBUG = False
 
 # ----------------------------------------------------------------------
 # SQL Utility Functions
@@ -42,7 +42,6 @@ def get_conn(is_admin=True):
             password="admin1pw" if is_admin else "client1pw",
             database="moviesdb",  # replace this with your database name
         )
-        print("Successfully connected.")
         return conn
     except mysql.connector.Error as err:
         # Remember that this is specific to _database_ users, not
@@ -69,12 +68,13 @@ def find_movie_rating(movie_id):
     Calculates the average rating of a movie.
     """
     sql = f"""
-    CALL calc_movie_rating({movie_id});
+    SELECT calc_movie_rating({movie_id});
     """
     try:
+        conn = get_conn()
         cursor = conn.cursor()
         cursor.execute(sql)
-        rows = cursor.fetchall()
+        rows = cursor.fetchone()
     except mysql.connector.Error as err:
         if DEBUG:
             sys.stderr(err)
@@ -82,7 +82,7 @@ def find_movie_rating(movie_id):
         else:
             sys.stderr("An error occurred when finding the movie rating.")
             return
-    return rows[0][1]
+    return rows[0]
 
 
 def view_movies_by_popularity():
@@ -91,9 +91,13 @@ def view_movies_by_popularity():
     """
     global BACK_FUNCTION
     BACK_FUNCTION = view_movies_by_popularity
+    conn = get_conn()
     cursor = conn.cursor()
     sql = """
-    SELECT m.movie_id, m.title, EXTRACT(YEAR FROM m.release_date), COUNT(r.movie_id) as review_count
+    SELECT m.movie_id, 
+           m.title, 
+           EXTRACT(YEAR FROM m.release_date), 
+           COUNT(r.movie_id) as review_count
     FROM movie m
     LEFT JOIN review r ON m.movie_id = r.movie_id
     GROUP BY m.movie_id
@@ -129,6 +133,7 @@ def view_movies_by_genre():
     global BACK_FUNCTION
     BACK_FUNCTION = view_movies_by_genre
     genre = input("Enter the genre: ")
+    conn = get_conn()
     cursor = conn.cursor()
     sql = f"""
     SELECT m.movie_id, m.title, EXTRACT(YEAR FROM m.release_date)
@@ -146,13 +151,13 @@ def view_movies_by_genre():
             sys.exit(1)
         else:
             sys.stderr(
-                "An error occurred when generating movies of the genre: {}".format(
-                    genre
-                )
+                f"An error occurred when generating movies of \
+                the genre: {genre}"
             )
             return
     if not rows:
         print("No movies found in the genre: {}.".format(genre))
+        show_movies_menu()
     else:
         print("Here are the movie in the genre {}: \n".format(genre))
         movies = [f"{row[1]} ({row[2]})" for row in rows]
@@ -167,9 +172,11 @@ def view_movies_by_year():
     global BACK_FUNCTION
     BACK_FUNCTION = view_movies_by_year
     year = input("Please enter the release year: ")
+    conn = get_conn()
     cursor = conn.cursor()
     sql = (
-        "SELECT movie_id, title, EXTRACT(YEAR FROM release_date) FROM movie WHERE YEAR(release_date) = '%s' ORDER BY title ASC LIMIT 10;"
+        """SELECT movie_id, title, EXTRACT(YEAR FROM release_date) FROM movie 
+        WHERE YEAR(release_date) = '%s' ORDER BY release_date DESC LIMIT 10;"""
         % (year)
     )
     try:
@@ -181,7 +188,7 @@ def view_movies_by_year():
             sys.exit(1)
         else:
             sys.stderr(
-                "An error occurred when generating movies released in {}.".format(year)
+                f"An error occurred when generating movies released in {year}."
             )
             return
     if not rows:
@@ -199,6 +206,7 @@ def view_movies_by_rating():
     """
     global BACK_FUNCTION
     BACK_FUNCTION = view_movies_by_rating
+    conn = get_conn()
     cursor = conn.cursor()
     sql = """
     SELECT m.movie_id, m.title, AVG(r.rating) as average_rating
@@ -231,13 +239,14 @@ def view_movies_by_rating():
 
 def write_a_review():
     """
-    Writes a review for a movie. Prompts the user for their user ID, the movie ID,
-    their rating, and their review text, then inserts this information into the reviews table.
+    Writes a review for a movie. Prompts the user for their user ID, the 
+    movie ID, their rating, and their review text, then inserts this 
+    information into the reviews table.
     """
     rating = input("Please rate the movie (0.0 to 5.0): ")
     new_review = input("Write your review: ")
     sql = """
-    CALL add_or_update_review(%s, %s, %s, %s);
+    CALL add_or_update_review(%s, %s, %s, '%s');
     """ % (
         CURRENT_USER_ID,
         CURRENT_MOVIE_ID,
@@ -245,9 +254,12 @@ def write_a_review():
         new_review
     )
     try:
+        conn = get_conn()
         cursor = conn.cursor()
         cursor.execute(sql)
+        conn.commit()
         print("Your review has been successfully submitted.")
+        show_client_main_menu()
     except mysql.connector.Error as err:
         if DEBUG:
             sys.stderr(err)
@@ -261,10 +273,11 @@ def create_list(title, description):
     """
     Creates a list of movies.
     """
+    conn = get_conn()
     cursor = conn.cursor()
     sql = """
     INSERT INTO list (created_by, title, description)
-    VALUES (%s, %s, %s);
+    VALUES (%s, '%s', '%s');
     """ % (
         CURRENT_USER_ID,
         title,
@@ -272,7 +285,9 @@ def create_list(title, description):
     )
     try:
         cursor.execute(sql)
+        conn.commit()
         print("Your new list has been successfully created.")
+        BACK_FUNCTION()
     except mysql.connector.Error as err:
         if DEBUG:
             sys.stderr(err)
@@ -286,6 +301,7 @@ def follow_a_user(follower_id, following_id):
     """
     Follows a user
     """
+    conn = get_conn()
     cursor = conn.cursor()
     sql = """
     INSERT INTO follower (follower_id, following_id)
@@ -308,8 +324,10 @@ def follow_a_user(follower_id, following_id):
 
 def add_movie_to_list(list_id):
     """
-    Adds a movie to a user's list by inserting a record into the list_movies table.
+    Adds a movie to a user's list by inserting a record into the list_movies
+    table.
     """
+    conn = get_conn()
     cursor = conn.cursor()
     sql = f"""
     CALL add_movie_to_list({list_id}, {CURRENT_MOVIE_ID});
@@ -319,12 +337,15 @@ def add_movie_to_list(list_id):
         SELECT 1 FROM movie_in_list 
         WHERE list_id = {list_id} AND movie_id = {CURRENT_MOVIE_ID};
         """
-        if cursor.execute(existing_movie_query).fetchone():
+        cursor.execute(existing_movie_query)
+        result = cursor.fetchone()
+        if result:
             print("This movie is already in the list.")
         else:
             cursor.execute(sql)
             conn.commit()
             print("The movie has been successfully added to your list.")
+            show_movies_menu()
     except mysql.connector.Error as err:
         if DEBUG:
             sys.stderr(err)
@@ -336,17 +357,21 @@ def add_movie_to_list(list_id):
 
 def remove_movie_from_list(list_id, movie_id):
     """
-    Removes a movie from a user's list by deleting the record from the list_movies table.
+    Removes a movie from a user's list by deleting the record from the 
+    list_movies table.
     """
+    conn = get_conn()
     cursor = conn.cursor()
     sql = f"""
-    CALL remove_movie_from_list({list_id}, {movie_id});
+    CALL remove_from_list({list_id}, {movie_id});
     """
     try:
         cursor.execute(sql)
         conn.commit()
         if cursor.rowcount > 0:
+            conn.commit()
             print("The movie has been successfully removed from your list.")
+            BACK_FUNCTION()
         else:
             print("The movie was not found in the specified list.")
     except mysql.connector.Error as err:
@@ -354,13 +379,14 @@ def remove_movie_from_list(list_id, movie_id):
             sys.stderr(err)
             sys.exit(1)
         else:
-            sys.stderr("An error occurred when removing the movie from the list.")
+            sys.stderr("An error occurred removing the movie from the list.")
             return
 
 def search_movies_by_name(query):
     """
     Searches for movies by name. Returns a list of movies that match the query.
     """
+    conn = get_conn()
     cursor = conn.cursor()
     sql = """
     SELECT movie_id, title, YEAR(release_date) FROM movie WHERE title LIKE '%s';
@@ -384,6 +410,7 @@ def search_movies_by_id(query):
     """
     Searches for movies by id. Returns a list of movies that match the query.
     """
+    conn = get_conn()
     cursor = conn.cursor()
     sql = """
     SELECT * FROM movie WHERE movie_id = %s;
@@ -407,6 +434,7 @@ def get_movies_in_list(list_id):
     """
     Returns all the movies in a given list_id.
     """
+    conn = get_conn()
     cursor = conn.cursor()
     sql = """
     SELECT m.movie_id, m.title, YEAR(release_date) FROM movie m
@@ -438,10 +466,11 @@ def add_movie(movie):
         movie: A dictionary representing a movie with the keys "title", 
                "release_date", "description", "director", "cast", "runtime".
     """
+    conn = get_conn()
     cursor = conn.cursor()
     sql = """
     INSERT INTO movie (title, release_date, description, director, cast, runtime)
-    VALUES (%s, %s, %s, %s, %s, %s);
+    VALUES ('%s', '%s', '%s', '%s', '%s', %s);
     """ % (
         movie["title"],
         movie["release_date"],
@@ -452,7 +481,9 @@ def add_movie(movie):
     )
     try:
         cursor.execute(sql)
+        conn.commit()
         print("Your new movie has been successfully added.")
+        show_admin_menu()
     except mysql.connector.Error as err:
         if DEBUG:
             sys.stderr(err)
@@ -468,6 +499,7 @@ def delete_user(user_id):
     Args:
         user_id: The id of the user to delete.
     """
+    conn = get_conn()
     cursor = conn.cursor()
     sql = """
     DELETE FROM user_account WHERE user_id = %s;
@@ -478,6 +510,8 @@ def delete_user(user_id):
         cursor.execute(sql)
         if cursor.rowcount > 0:
             print("The user has been successfully deleted.")
+            conn.commit()
+            show_admin_menu()
         else:
             print("The user was not found in the database.")
     except mysql.connector.Error as err:
@@ -495,6 +529,7 @@ def delete_list(list_id):
     Args:
         list_: The id of the user to delete.
     """
+    conn = get_conn()
     cursor = conn.cursor()
     sql = """
     DELETE FROM list WHERE list_id = %s;
@@ -505,6 +540,8 @@ def delete_list(list_id):
         cursor.execute(sql)
         if cursor.rowcount > 0:
             print("The list has been successfully deleted.")
+            conn.commit()
+            show_admin_menu()
         else:
             print("The list was not found in the database.")
     except mysql.connector.Error as err:
@@ -522,6 +559,7 @@ def delete_movie(movie_id):
     Args:
         movie_id: The id of the movie to delete.
     """
+    conn = get_conn()
     cursor = conn.cursor()
     sql = """
     DELETE FROM movie WHERE movie_id = %s;
@@ -532,6 +570,8 @@ def delete_movie(movie_id):
         cursor.execute(sql)
         if cursor.rowcount > 0:
             print("The movie has been successfully deleted.")
+            conn.commit()
+            show_admin_menu()
         else:
             print("The movie was not found in the database.")
     except mysql.connector.Error as err:
@@ -547,8 +587,9 @@ def get_list_details(list_id):
     Returns the a dictionary representing the details of the list with the 
     given list_id.
     """
+    conn = get_conn()
     cursor = conn.cursor()
-    sql = "SELECT * FROM list WHERE list_id LIKE %s;" % (list_id)
+    sql = "SELECT * FROM list WHERE list_id = %s;" % (list_id)
     try:
         cursor.execute(sql)
         rows = cursor.fetchall()
@@ -574,8 +615,9 @@ def get_movie_details(movie_id):
     Returns a dictionary representing the details of the movie with the 
     given movie_id.
     """
+    conn = get_conn()
     cursor = conn.cursor()
-    sql = "SELECT * FROM movie WHERE movie_id LIKE %s;" % (movie_id)
+    sql = "SELECT * FROM movie WHERE movie_id = %s;" % (movie_id)
     try:
         cursor.execute(sql)
         rows = cursor.fetchall()
@@ -601,9 +643,10 @@ def get_movie_reviews(movie_id):
     """
     Returns all reviews for a given movie.
     """
+    conn = get_conn()
     cursor = conn.cursor()
     sql =  f"""
-    SELECT get_reviews_for_movie({movie_id});
+    CALL get_reviews_for_movie({movie_id});
     """ 
     try:
         cursor.execute(sql)
@@ -654,6 +697,7 @@ def authenticate_user(username, password):
             sys.exit(1)
         else:
             sys.stderr("An error occurred in authenticating the user.")
+    return True
 
 
 def create_user():
@@ -666,6 +710,7 @@ def create_user():
     sql = f"""
     CALL sp_add_user('{username}', '{password}', '{bio}', 0);
     """
+    conn = get_conn()
     cursor = conn.cursor()
     try:
         cursor.execute(sql)
@@ -685,7 +730,7 @@ def show_account_options():
     """
     user_options = ["Admin", "Client", "Quit"]
     user_menu = TerminalMenu(
-        user_options, title="Select your user type", clear_screen=True
+        user_options, title="Select your user type", clear_screen=False
     )
     print("Welcome to the Movie Database!")
     choice = user_menu.show()
@@ -694,6 +739,8 @@ def show_account_options():
         password = input("Enter your password: ")
         if authenticate_user(username, password):
             show_admin_menu()
+        else:
+            show_account_options()
     elif choice == 1:
         options = ["Login", "Create an account", "Quit"]
         start_menu = TerminalMenu(options)
@@ -703,6 +750,8 @@ def show_account_options():
             password = input("Enter your password: ")
             if authenticate_user(username, password):
                 show_client_main_menu()
+            else:
+                show_account_options()
         elif choice == 1:
             create_user()
             show_client_main_menu()
@@ -735,7 +784,7 @@ def display_movies(movies, ids):
     movies.append("Go Back")
     results_menu = TerminalMenu(movies, title=f"{len(movies) - 1} results:")
     choice = results_menu.show()
-    if choice == 10:
+    if choice == len(movies) - 1 or len(movies) == 0:
         show_movies_menu()
     else: 
         show_movie_details(ids[choice])
@@ -750,9 +799,13 @@ def show_list(list_id):
     movies = [f"{row[1]} ({row[2]})" for row in rows]
     ids  = [f"{row[0]}" for row in rows]
     list_details = get_list_details(list_id)
+    movies.append("Go back")
     list_menu = TerminalMenu(movies, title=f"List: {list_details['title']}")
     choice = list_menu.show()
-    show_movie_details(ids[choice], list_id=list_id)
+    if choice == len(movies) - 1 or len(movies) == 0:
+        BACK_FUNCTION()
+    else:
+        show_movie_details(ids[choice], list_id=list_id)
 
 
 def display_lists(lists, ids, on_click_fn=show_list):
@@ -765,7 +818,7 @@ def display_lists(lists, ids, on_click_fn=show_list):
 
     results_menu = TerminalMenu(lists, title=f"{len(lists)} results:")
     choice = results_menu.show()
-    if choice == len(lists) - 1:
+    if choice == len(lists) - 1 or len(lists) == 0:
         BACK_FUNCTION()
     else: 
         on_click_fn(ids[choice])
@@ -848,6 +901,7 @@ def show_my_lists():
     """ "
     Returns all lists created by the current user.
     """
+    conn = get_conn()
     cursor = conn.cursor()
     sql = """
     SELECT list_id, title, description, date_created FROM list
@@ -872,6 +926,7 @@ def show_all_lists():
     """
     Returns  all lists in the database.
     """
+    conn = get_conn()
     cursor = conn.cursor()
     sql = "SELECT list_id, title, description, date_created FROM list;"
     try:
@@ -898,20 +953,23 @@ def show_movie_details(movie_id, list_id=None):
     options.append("Go Back")
     movie_details = get_movie_details(movie_id)
     movie_rating = find_movie_rating(movie_id)
+    movie_reviews = '\n    '.join(get_movie_reviews(movie_id))
     title = f"""
     {movie_details['title']} ({movie_details['release_date'].year})
-    {textwrap.fill(movie_details['description'], width=80, subsequent_indent="    ")}
-    
+    {textwrap.fill(movie_details['description'], 
+                   width=80, subsequent_indent="    ")}
+
     {movie_details['runtime']//60}h {movie_details['runtime']%60}min
     Rating: {movie_rating}
-    
+
     Directed by {movie_details['director']}
-    Starring {textwrap.fill(movie_details['cast'], width=80, subsequent_indent="    ")}
+    Starring {textwrap.fill(movie_details['cast'], 
+              width=80, subsequent_indent="    ")}
     
     Reviews:
-    {"\n".join(get_movie_reviews(movie_id))}
+    {movie_reviews if movie_reviews else "No reviews yet."}
     """
-    movie_details_menu = TerminalMenu(options, title=title, clear_screen=True)
+    movie_details_menu = TerminalMenu(options, title=title, clear_screen=False)
     choice = movie_details_menu.show()
     if choice == 0:
         write_a_review()
@@ -932,7 +990,7 @@ def show_movie_details(movie_id, list_id=None):
 
 def show_client_main_menu():
     options = ["Browse Movies", "Browse Movie Lists", "Log out", "Quit"]
-    main_menu = TerminalMenu(options, title="Main Menu", clear_screen=True)
+    main_menu = TerminalMenu(options, title="Main Menu", clear_screen=False)
     choice = main_menu.show()
     if choice == 0:
         show_movies_menu()
@@ -947,14 +1005,19 @@ def show_client_main_menu():
 
 
 def show_admin_menu():
-    options = ["Add Movie", "Delete Movie", "Delete User", "Delete List", "Log Out", "Quit"]
+    options = ["Add Movie", 
+               "Delete Movie", 
+               "Delete User", 
+               "Delete List", 
+               "Log Out", 
+               "Quit"]
     admin_menu = TerminalMenu(options, title="Choose an option")
     choice = admin_menu.show()
     if choice == 0:
         # query admin to add movie
         movie = {}
         movie["title"] = input("Enter the movie title: ")
-        movie["release_date"] = input("Enter the release data: ")
+        movie["release_date"] = input("Enter the release date (YYYY-MM-DD): ")
         movie["description"] = input("Enter the description: ")
         movie["director"] = input("Enter the director(s): ")
         movie["cast"] = input("Enter the cast: ")

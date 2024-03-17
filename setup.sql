@@ -52,8 +52,8 @@ CREATE TABLE review (
     review_text TEXT,
     review_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, movie_id),
-    FOREIGN KEY (user_id) REFERENCES user_account(user_id),
-    FOREIGN KEY (movie_id) REFERENCES movie(movie_id)
+    FOREIGN KEY (user_id) REFERENCES user_account(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (movie_id) REFERENCES movie(movie_id) ON DELETE CASCADE
 );
 
 -- Represents a movie list in the database, uniquely identified by the list_id.
@@ -73,8 +73,8 @@ CREATE TABLE movie_in_list (
     list_id INT,
     movie_id INT,
     PRIMARY KEY (list_id, movie_id),
-    FOREIGN KEY (list_id) REFERENCES list(list_id),
-    FOREIGN KEY (movie_id) REFERENCES movie(movie_id)
+    FOREIGN KEY (list_id) REFERENCES list(list_id) ON DELETE CASCADE,
+    FOREIGN KEY (movie_id) REFERENCES movie(movie_id) ON DELETE CASCADE
 );
 
 -- A referencing relation to model a follower, uniquely identified by the

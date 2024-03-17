@@ -6,9 +6,10 @@ WHERE m.movie_id = 1
 GROUP BY m.title;
 
 -- Get the top 10 movies ordered by their number of reviews, showing the 
---movie id, title, release year, and review count
+-- movie id, title, release year, and review count
 SELECT m.movie_id, 
-       m.title, EXTRACT(YEAR FROM m.release_date) AS release_year, 
+       m.title, 
+       EXTRACT(YEAR FROM m.release_date) AS release_year, 
        COUNT(r.movie_id) as review_count
 FROM movie m
 LEFT JOIN review r ON m.movie_id = r.movie_id
@@ -24,14 +25,15 @@ JOIN movie_genre mg ON m.movie_id = mg.movie_id
 WHERE mg.genre = 'Action'
 LIMIT 10;
 
--- Find all movies released in 2018, ordered alphabetically by title
+-- Find all movies released in 2018, ordered by release date
 SELECT movie_id, title, EXTRACT(YEAR FROM release_date) AS release_year
 FROM movie 
 WHERE YEAR(release_date) = 2018
-ORDER BY title ASC 
+ORDER BY release_date DESC 
 LIMIT 10;
 
--- Get the top 10 movies ordered by average rating (and then title for ties), showing their movie ID, title, and average rating
+-- Get the top 10 movies ordered by average rating (and then title for ties), 
+-- showing their movie ID, title, and average rating
 SELECT m.movie_id, m.title, AVG(r.rating) AS average_rating
 FROM movie m
 LEFT JOIN review r ON m.movie_id = r.movie_id
@@ -43,7 +45,8 @@ LIMIT 10;
 INSERT INTO review (user_id, movie_id, rating, review_text)
 VALUES (1, 12, 4.5, 'Nice movie');
 
--- Create a new list with a title and description, associated with a specific user
+-- Create a new list with a title and description, associated with a specific 
+-- user
 INSERT INTO list (created_by, title, description)
 VALUES (2, 'Edens watchlist', 'Can not wait to watch these');
 

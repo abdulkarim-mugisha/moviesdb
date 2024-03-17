@@ -18,9 +18,6 @@ Steps to set up and run the Movie Review Application.
 2. Run the following mySQL commands in this order to set up the database and set the necessary permissions:
 
     ```txt
-    CREATE USER 'movies'@'localhost' IDENTIFIED BY 'password';
-    GRANT ALL PRIVILEGES ON moviesdb.* TO 'movies'@'localhost';
-    FLUSH PRIVILEGES;   
     CREATE DATABASE moviesdb;
     USE moviesdb;
     SET GLOBAL local_infile=1;
@@ -39,7 +36,7 @@ Steps to set up and run the Movie Review Application.
 
 #### Navigation
 
-Use the arrow keys to navigate through menu options and press Enter to select menu items. For any menu, press `q` to quit the application anytime.
+Use the arrow keys to navigate through menu options and press Enter to select menu items.
 
 #### User Type Selection
 
@@ -54,11 +51,11 @@ Upon starting the application, you will first be asked to select your user type:
 
 You can use the following credentials to login:
 - *Client Account* 
-  - Username: `michaela54`
-  - Password: `michaela54pw`
+  - Username: `vwells`
+  - Password: `vwellspw`
 - *Admin Account* 
-  - Username: `brittany71`
-  - Password: `brittany71pw`
+  - Username: `ebennett`
+  - Password: `ebennettpw`
 
 
 #### Client Functionality
@@ -93,3 +90,4 @@ The CSV data in the folder `data` was extracted from the Kaggle dataset [TMDB Mo
 you follow. 
 - Adding new admins. 
 - Pagination for navigation through large movie results lists.
+- Breadcrumbs (more sophisticated functionality for going back in menus).

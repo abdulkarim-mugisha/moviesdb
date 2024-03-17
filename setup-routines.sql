@@ -18,7 +18,9 @@ BEGIN
     RETURN IFNULL(avg_rating, 0.00);
 END!
 DELIMITER ;
+SHOW WARNINGS;
 
+DELIMITER !
 -- Adds or updates a review for a movie by a user
 CREATE PROCEDURE add_or_update_review(
     p_user_id INT,
@@ -45,7 +47,9 @@ BEGIN
     END IF;
 END!
 DELIMITER ;
+SHOW WARNINGS;
 
+DELIMITER !
 -- Retrieves all reviews for a specific movie, showing the username, rating,
 -- and review text
 CREATE PROCEDURE get_reviews_for_movie(IN p_movie_id INT)
@@ -55,9 +59,11 @@ BEGIN
     JOIN user_account ua ON r.user_id = ua.user_id
     WHERE r.movie_id = p_movie_id
     ORDER BY r.review_date DESC;
-END //
+END !
 DELIMITER ;
+SHOW WARNINGS;
 
+DELIMITER !
 -- Trigger to automatically delete a movie list if it becomes empty after a
 -- movie is removed
 CREATE TRIGGER delete_empty_list
@@ -77,7 +83,9 @@ BEGIN
     END IF;
 END!
 DELIMITER ;
+SHOW WARNINGS;
 
+DELIMITER !
 -- Adds a movie to a specified list
 CREATE PROCEDURE add_movie_to_list(p_list_id INT, p_movie_id INT)
 BEGIN
@@ -86,7 +94,9 @@ BEGIN
     VALUES (p_list_id, p_movie_id);
 END !
 DELIMITER ;
+SHOW WARNINGS;
 
+DELIMITER !
 -- Removes a movie from a specified list
 CREATE PROCEDURE remove_from_list(p_list_id INT, p_movie_id INT)
 BEGIN
@@ -95,6 +105,7 @@ BEGIN
     WHERE list_id = p_list_id AND movie_id = p_movie_id;
 END !
 DELIMITER ;
+SHOW WARNINGS;
 
 
 
