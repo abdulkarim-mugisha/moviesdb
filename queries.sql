@@ -23,7 +23,6 @@ WHERE YEAR(release_date) = 2018
 ORDER BY title ASC 
 LIMIT 10;
 
-
 SELECT m.movie_id, m.title, AVG(r.rating) as average_rating
 FROM movie m
 LEFT JOIN review r ON m.movie_id = r.movie_id

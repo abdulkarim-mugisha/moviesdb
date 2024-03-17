@@ -1,7 +1,6 @@
 DROP FUNCTION IF EXISTS calc_movie_rating;
 
-DELIMITER $$
-
+DELIMITER !
 CREATE FUNCTION calc_movie_rating(movie_id INT) RETURNS DECIMAL(3,2)
 DETERMINISTIC
 BEGIN
@@ -11,13 +10,10 @@ BEGIN
     LEFT JOIN review r ON m.movie_id = r.movie_id
     WHERE m.movie_id = movie_id;
     RETURN IFNULL(avg_rating, 0.00);
-END$$
-
+END!
 DELIMITER ;
 
-
 DELIMITER !
-
 CREATE PROCEDURE add_or_update_review(
     p_user_id INT,
     p_movie_id INT,
@@ -39,23 +35,22 @@ BEGIN
         VALUES (p_user_id, p_movie_id, p_rating, p_review_text);
     END IF;
 END!
-
 DELIMITER ;
 
-DELIMITER !
+DELIMITER //
 
-CREATE PROCEDURE get_reviews_for_movie(p_movie_id INT)
+CREATE PROCEDURE get_reviews_for_movie(IN p_movie_id INT)
 BEGIN
-    SELECT user_id, rating, review_text, review_date
-    FROM review
-    WHERE movie_id = p_movie_id
-    ORDER BY review_date DESC;
-END!
+    SELECT ua.username, r.rating, r.review_text
+    FROM review r
+    JOIN user_account ua ON r.user_id = ua.user_id
+    WHERE r.movie_id = p_movie_id
+    ORDER BY r.review_date DESC;
+END //
 
 DELIMITER ;
 
 DELIMITER !
-
 CREATE TRIGGER delete_empty_list
 AFTER DELETE ON movie_in_list
 FOR EACH ROW
@@ -72,8 +67,22 @@ BEGIN
         DELETE FROM list WHERE list_id = OLD.list_id;
     END IF;
 END!
-
 DELIMITER ;
 
+DELIMITER !
+CREATE PROCEDURE add_movie_to_list(p_list_id INT, p_movie_id INT)
+BEGIN
+    INSERT INTO movie_in_list (list_id, movie_id)
+    VALUES (p_list_id, p_movie_id);
+END !
+DELIMITER ;
+
+
+DELIMITER !
+CREATE PROCEDURE remove_from_list(p_list_id INT, p_movie_id INT)
+BEGIN
+    DELETE FROM movie_in_list WHERE list_id = p_list_id AND movie_id = p_movie_id;
+END !
+DELIMITER ;
 
 
