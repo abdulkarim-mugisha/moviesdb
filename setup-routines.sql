@@ -1,5 +1,3 @@
--- TODO: when a user is deleted, delete their corresponding lists
-
 DROP FUNCTION IF EXISTS calc_movie_rating;
 
 DELIMITER $$
