@@ -64,7 +64,7 @@ CREATE TABLE list (
     description TEXT,
     date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (list_id),
-    FOREIGN KEY (created_by) REFERENCES user_account(user_id)
+    FOREIGN KEY (created_by) REFERENCES user_account(user_id) ON DELETE CASCADE
 );
 
 -- A referencing relation to model a movie in a list, uniquely identified by the

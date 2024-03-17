@@ -29,7 +29,10 @@ DELIMITER ;
 -- of 20 characters). Salts the password with a newly-generated salt value,
 -- and then the salt and hash values are both stored in the table.
 DELIMITER !
-CREATE PROCEDURE sp_add_user(new_username VARCHAR(20), password VARCHAR(20), is_admin BOOLEAN)
+CREATE PROCEDURE sp_add_user(new_username VARCHAR(20), 
+                             password VARCHAR(20), 
+                             bio TEXT,
+                             is_admin BOOLEAN)
 BEGIN
   DECLARE salt CHAR(8);
   DECLARE password_hash BINARY(64);
@@ -38,8 +41,8 @@ BEGIN
   SET password_hash = SHA2(CONCAT(salt, password), 256);
   -- #TODO: handle cases where a non-unique username is given
 
-  INSERT INTO user_account(username, salt, password_hash, is_admin) VALUES 
-    (new_username, salt, password_hash, is_admin);
+  INSERT INTO user_account(username, salt, password_hash, bio, is_admin) VALUES 
+    (new_username, salt, password_hash, bio, is_admin);
 END !
 DELIMITER ;
 
