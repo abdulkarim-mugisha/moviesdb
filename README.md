@@ -1,6 +1,6 @@
 # CS 121 Final Project: Movies Database Application
 
-This is an interactive command-line interface (CLI) application designed to browse, review, and manage movies and movie lists. This application allows users to explore movies by various criteria, manage personalized movie lists, and contribute reviews. The database is implemented using MySQL, and the application is developed using Python.
+This is an interactive command-line interface (CLI) application designed to browse, review, and manage movies and movie lists. The database is implemented using MySQL, and the application is developed using Python.
 
 ## Features
 
